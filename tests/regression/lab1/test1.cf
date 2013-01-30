@@ -1,0 +1,146 @@
+{- Program Def -}
+PDef. Program ::= [Def] ;
+terminator Def "" ;
+
+token VIdent (letter (letter|digit|'_')* ) ;
+
+{- Function Def -}
+Dfun. Def ::= VarType VIdent"("[DArg]")" Block ;
+Dfun2. Def ::= VarType VIdent"("[DArg]")" ";" ;
+Dfun3. Def ::= "inline" VarType VIdent"("[DArg]")" Block ;
+Dfun4. Def ::= "inline" VarType VIdent"("[DArg]")" ";" ;
+BStm. Block ::= "{"[Stm]"}" ;
+terminator Stm "" ;
+separator DArg "," ;
+AType. DArg ::= VarType VIdent;
+AType2. DArg ::= VarType ;
+AType3. DArg ::= VarIni ;
+SExp. Stm ::= Exp";" ;
+SReturn. Stm ::= "return" Exp";" ;
+Fvar. Stm ::= VarDekl ;
+
+{-Var Def-}
+Dvar. Def ::= VarDekl ;
+
+{-TypeDef -}
+TDef. TypeDef ::= "typedef" VarType VIdent ";" ;
+STDef. Stm ::= TypeDef ;
+DTDef. Def ::= TypeDef ;
+
+{-using Def-}
+DUse. Def ::= "using" [Constant]";" ;
+
+{-Struct Def -}
+Struct. Struct ::= "struct" VIdent "{"[Def]"}"";" ;
+StrDef. Def ::= Struct ;
+StrStm. Stm ::= Struct ;
+
+{-Variable deklaration-}
+Vartype. VarType ::= "const" Type "&";
+Vartype2. VarType ::= Type "&" ;
+Vartype3. VarType ::= "const" Type ;
+Vartyp4. VarType ::= Type;
+
+VarD. Dekl ::= VarType [VIdent] ;
+SVarD. SDekl ::= VarType VIdent ;
+SVarIni. SDekl ::= VarIni ;
+
+separator nonempty VIdent ",";
+
+IniVar. VarIni ::= VarType VIdent "=" Exp;
+VarIniDekl. VarDekl ::= VarIni";" ;
+VarDekl. VarDekl ::= Dekl";";
+
+AssignTo. AssignTo ::= VIdent ;
+AssignTo2. AssignTo ::= Index ;
+AssignTo3. AssignTo ::= VarRef ;
+
+Assign. Assign ::= AssignTo "=" Exp;
+InkAssign. Assign ::= AssignTo "+=" Exp ;
+DecAssign. Assign ::= AssignTo "-=" Exp ;
+
+{-Expressions-}
+coercions Exp 16 ;
+EInt. Exp16 ::= Integer ;
+EString. Exp16 ::= [String] ;
+EChar. Exp16 ::= Char ;
+EDouble. Exp16 ::= Double ;
+EBoolT. Exp16 ::= "true" ;
+EBollF. Exp16 ::= "false" ;
+EConst. Exp15 ::= [Constant] ;
+EIndex. Exp15 ::= Index ;
+EFunc. Exp15 ::= FuncCall ;
+EProj. Exp14 ::= StructProj ;
+EVarRef. Exp14 ::= VarRef ;
+EInc. Exp13 ::= Exp14 "++" ;
+EDec. Exp13 ::= Exp14 "--" ;
+EDRef. Exp13 ::= "*" Exp14 ;
+EInc2. Exp13 ::= "++" Exp14 ;
+EDec2. Exp13 ::= "--" Exp14 ;
+ENeg. Exp13 ::= "!" Exp14 ;
+EMul. Exp12 ::= Exp12 "*" Exp13 ;
+EDiv. Exp12 ::= Exp12 "/" Exp13 ;
+EMod. Exp12 ::= Exp12 "%" Exp13 ;
+EAdd. Exp11 ::= Exp11 "+" Exp12 ;
+ESub. Exp11 ::= Exp11 "-" Exp12 ;
+ELShift. Exp10 ::= Exp10 "<<" Exp11 ;
+ERShift. Exp10 ::= Exp10 ">>" Exp11 ;
+ELess. Exp9 ::= Exp9 "<" Exp10 ;
+EGreater. Exp9 ::= Exp9 ">" Exp10 ;
+EEQLess. Exp9 ::= Exp9 "<=" Exp10 ;
+EEQGreater. Exp9 ::= Exp9 ">=" Exp10 ;
+EEQUAL. Exp8 ::= Exp8 "==" Exp9 ;
+EINEQUAL. Exp8 ::= Exp8 "!=" Exp9 ;
+EConj. Exp4 ::= Exp4 "&&" Exp5 ;
+EDisj. Exp3 ::= Exp3 "||" Exp4 ;
+EAssign. Exp2 ::= Assign ;
+ECond. Exp2 ::= Exp2 "?" Exp3 ":" Exp4 ;
+EThrow. Exp1 ::= "throw" Exp2;  
+
+Index. Index ::= VIdent "["Exp"]" ;
+terminator nonempty String "" ;
+separator Exp "," ;
+
+{-Constant-}
+CIdent. Constant ::= VIdent ;
+CTemplate. Constant ::= VIdent"<"[Type]">" ;
+separator nonempty Constant "::" ;
+
+{-Type-}
+separator nonempty Type "," ;
+TInt. Type ::= "int" ;
+TConstant. Type ::= [Constant] ;
+TBool. Type ::= "bool" ;
+TDouble. Type ::= "double" ;
+TVoid. Type ::= "void" ;
+
+{-Comment-}
+comment "/*" "*/" ;
+comment "//" ;
+comment "#" ;
+
+{-Loop and If-}
+WLoop. Stm ::= "while" "("Exp")" IfLoopBody ;
+DWLoop. Stm ::= "do" IfLoopBody "while" "("Exp")"";" ;
+FLoop. Stm ::= "for" "(" SDekl";" Exp ";" Exp ")" IfLoopBody ;
+IfStm. Stm ::= "if" "("Exp")" IfLoopBody ;
+IfStm2. Stm ::= "if" "("Exp")" IfLoopBody Else;
+ElStm. Else ::= "else" IfLoopBody ;
+OneStm. IfLoopBody ::= Stm;
+MulStm. IfLoopBody ::= Block;
+
+
+{-Function Calls-}
+StructFuncCall. FuncCall ::= StructProj FuncCall;
+SingleFuncCall. FuncCall ::= VIdent "("[Exp]")" ;
+
+{-Struct projection-}
+StrucVarRef1. VarRef ::= StructProj VarRef ; 
+StructVarRef2. VarRef ::= StructProj VIdent ;
+
+PreProj1. PreProj ::= Index ;
+PreProj2. PreProj ::= VIdent ;
+SProj1. StructProj ::= PreProj ProjSep ;
+
+ProjSep. ProjSep ::= "." ;
+ProjSep2. ProjSep ::= "->" ;

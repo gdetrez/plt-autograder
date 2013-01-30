@@ -1,0 +1,20 @@
+Prog.   Program ::= [Def] ;
+
+DFun.    Def    ::= Id [Id] "=" Exp ";";
+
+EId.     Exp3   ::= Id ;
+EInt.    Exp3   ::= Integer ;
+EApp.    Exp2   ::= Id [Exp] ;
+ELess.   Exp1   ::= Exp1 "<" Exp2 ;
+EMinus.  Exp1   ::= Exp1 "-" Exp2 ;
+EPlus.   Exp1   ::= Exp1 "+" Exp2 ;
+ECond.   Exp0   ::= "if" Exp0 "then" Exp1 "else" Exp1 ;
+EAbstr.  Exp0   ::= "\\" Id "->" Exp ;
+
+coercions Exp 3 ;
+token Id (letter (letter | digit | '_')*) ;
+separator Id " " ;
+separator nonempty Def " ";
+separator Exp " " ;
+
+comment "--" ;
