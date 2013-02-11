@@ -11,10 +11,11 @@ data Options = Options
   { getOptionTestDir :: FilePath
   , getOptionVerbose :: Bool
   , getOptionLab     :: Lab
+  , getOptionDebug   :: Bool
 } deriving (Eq,Show)
 
 defaultOptions :: IO Options
 defaultOptions = do
   testsDir <- getDataFileName "."  
-  return $ Options (decodeString testsDir) False Help
+  return $ Options (decodeString testsDir) False Help False
 

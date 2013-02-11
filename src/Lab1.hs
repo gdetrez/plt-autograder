@@ -13,6 +13,7 @@ import Filesystem.Path.CurrentOS (encodeString)
 import Text.Printf
 import Test.HUnit
 import Options
+import Utils
 default (LT.Text)
 
 grade :: Options -> FilePath -> IO Test
@@ -26,30 +27,40 @@ grade opts filepath = shelly' $ do
   absFilepath <-  absPath filepath
   withTmpDir $ \tmpdir -> do
     -- Copy the cf file in the temp dir
+    dbg ("Grading lab 1, file: " ++ show filepath)
     cp absFilepath tmpdir
+    dbg ("Working in tmp dir: " ++ show tmpdir)
     cd tmpdir
     let cfFile = filename absFilepath
     -- run bnfc and then make
     bnfc "-haskell" "-m" cfFile
-    output <- make
-    let (shiftreduce,reducereduce) = grepForConflicts output
+    make
+    stderr <- lastStderr
+    let (shiftreduce,reducereduce) = grepForConflicts stderr
+    dbg ("Found conflicts (resp. s/r and r/r) " ++ show shiftreduce
+        ++ " " ++ show reducereduce)
     let tests = getOptionTestDir opts </> "lab1"
     goodFiles <- findCCFiles (tests </> "good")
     badFiles <- findCCFiles (tests </> "bad")
     testCf <- absPath $ testProgram cfFile
-    good <- mapM (testFile opts testCf True) goodFiles
-    bad <- mapM (testFile opts testCf False) badFiles
+    good <- flip mapM goodFiles (\file -> do
+      a <- testFile opts testCf True file
+      return (encodeString (filename file) ~: a))
+    bad <- flip mapM badFiles (\file -> do
+      a <- testFile opts testCf False file
+      return (encodeString (filename file) ~: a))
     return $ "Tests for lab 1" ~:
-      [ "Max. 10 shift/reduce conflicts" ~: 
+      [ "Good programs" ~: good
+      , "Bad programs"  ~: bad 
+      , "Max. 10 shift/reduce conflicts" ~: 
           assertBool "More than 10 shift/reduce conflicts" (shiftreduce <= 10)
       , "No reduce/reduce conflicts" ~:
-          assertBool "Reduce/reduce conflicts" (reducereduce == 0)
-      , "Good programs" ~: good
-      , "Bad programs"  ~: bad ]
+          assertBool "This grammar has reduce/reduce conflicts" (reducereduce == 0)]
   where bnfc = cmd "bnfc"
         make = cmd "make"
         shelly' = shelly . print_stdout v . print_commands v
         v = getOptionVerbose opts
+        dbg s = if (getOptionDebug opts) then debug s else return ()
 
 findCCFiles :: FilePath -> Sh [FilePath]
 findCCFiles = findWhen (return . flip hasExtension "cc")

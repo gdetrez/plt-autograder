@@ -8,6 +8,8 @@ import System.Directory
 import System.Environment   
 import Test.HUnit
 import Text.Printf
+import Data.List (intercalate)
+import System.Console.ANSI
 
 import qualified Lab1
 import qualified Lab2
@@ -35,7 +37,10 @@ options =
       "Grade lab 3"
   , Option "h" ["help"]
       (NoArg (\opt -> return opt { getOptionLab = Help }))
-      "Show help" ]
+      "Show help" 
+  , Option "d" ["debug"]
+      (NoArg (\opt -> return opt { getOptionDebug = True }))
+      "Debugging info" ]
 
 header = "#####"
 
@@ -63,7 +68,22 @@ usage = putStrLn "Usage: plt-autograder ( lab1 | lab2 | lab3 ) [PATH]"
 
 runGraderTT :: Test -> IO ()
 runGraderTT tests = do
-  counts <- runTestTT tests
+  -- counts <- runTestTT tests
+  (counts,us) <- performTest reportStart reportErr reportFailure () tests
   printf "Final score: %i/%i\n" (successes counts) (cases counts)
   where successes r = cases r - errors r - failures r
+        reportStart state _ = return ()
+        reportErr msg state _ = do
+          setSGR [SetColor Foreground Dull Red]
+          putStrLn (getName state)
+          putStrLn msg
+          setSGR [Reset]
+        reportFailure msg state _ = do
+          putStrLn $ (getName state) ++ " (error)"
+          setSGR [SetColor Foreground Dull Yellow]
+          putStrLn msg
+          setSGR [Reset]
+        dummyReport str state us = return ()
+        getName s = intercalate " > "
+          (reverse [ x | Label x <- Test.HUnit.path s])
 
