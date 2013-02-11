@@ -76,8 +76,8 @@ testFile opts testCf good path = errExit False $ do
   errors <- lastStderr
   return ((good && status == 0 || not good && status /= 0 ) @? (msg status output errors))
   where msg status out err = unlines
-          [ if good then printf "Fail to parse correct file: %s" name
-                    else printf "Parsed incorrect file :%s" name
+          [ if good then printf "Failed good program: %s" name
+                    else printf "Passed bad program: %s" name
           , printf "status: %d" status
           , "----- stdout -----"
           , LT.unpack out
